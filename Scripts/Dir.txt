@@ -1,0 +1,10 @@
+﻿BimQAT2/
+├─ CMakeLists.txt             # 根目录 CMake
+├─ extern/
+├─ MyMfcDll/                  # 子项目目录
+│   └─ CMakeLists.txt         # 子项目 CMake
+└─ src/                       # 源码单独目录
+    └─ MyMfcDll/
+        ├─ *.cpp
+        ├─ *.h
+        └─ *.rc

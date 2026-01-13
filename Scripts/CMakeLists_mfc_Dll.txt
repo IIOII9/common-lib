@@ -1,0 +1,35 @@
+﻿# =======================================================
+# MyMfcDll CMake template (源代码独立目录)
+# =======================================================
+
+# 指定源码目录
+set(SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../src/MyMfcDll")
+
+# 递归获取所有源文件
+file(GLOB_RECURSE SRC_FILES
+    "${SRC_DIR}/*.cpp"
+    "${SRC_DIR}/*.h"
+    "${SRC_DIR}/*.rc"
+)
+
+# 创建 MFC DLL
+add_library(MyMfcDll SHARED ${SRC_FILES})
+
+# VS 按目录显示
+source_group(TREE ${SRC_DIR} PREFIX "" FILES ${SRC_FILES})
+
+# 输出名（可选）
+set_target_properties(MyMfcDll PROPERTIES
+    OUTPUT_NAME "MyMfcDll"
+)
+
+# 链接全局接口库
+target_link_libraries(MyMfcDll
+    PRIVATE
+        project_options
+        project_warnings
+        project_bim
+)
+
+# 启用 MFC DLL 全套配置
+configure_mfc_dll(MyMfcDll)
