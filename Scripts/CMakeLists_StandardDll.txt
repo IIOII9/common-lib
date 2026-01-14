@@ -1,0 +1,71 @@
+﻿# =======================================================
+# Standard DLL – non-MFC
+# =======================================================
+
+# ------------------------------
+# Target name
+# ------------------------------
+set(TARGET_NAME StandardDll)
+
+# ------------------------------
+# Source directory
+# ------------------------------
+set(SRC_DIR "${CMAKE_SOURCE_DIR}/../MFCApplication16")
+
+# ------------------------------
+# Collect sources
+# ------------------------------
+file(GLOB_RECURSE CPP_FILES "${SRC_DIR}/*.cpp" "${SRC_DIR}/*.c")
+file(GLOB_RECURSE H_FILES   "${SRC_DIR}/*.h")
+file(GLOB_RECURSE RC_FILES  "${SRC_DIR}/*.rc")
+
+if(NOT CPP_FILES)
+    message(FATAL_ERROR "No source files found in ${SRC_DIR}")
+endif()
+
+# ------------------------------
+# Create DLL
+# ------------------------------
+add_library(${TARGET_NAME} SHARED
+    ${CPP_FILES}
+    ${H_FILES}
+    ${RC_FILES}
+)
+
+# ------------------------------
+# VS Solution Explorer grouping
+# ------------------------------
+source_group(TREE ${SRC_DIR} FILES
+    ${CPP_FILES}
+    ${H_FILES}
+    ${RC_FILES}
+)
+
+# ------------------------------
+# Include directories
+# ------------------------------
+target_include_directories(${TARGET_NAME} PRIVATE
+    ${SRC_DIR}
+)
+
+# ------------------------------
+# Optional precompiled header
+# ------------------------------
+# target_precompile_headers(${TARGET_NAME} PRIVATE
+#     "${SRC_DIR}/pch.h"
+# )
+
+# ------------------------------
+# Link global interface targets
+# ------------------------------
+target_link_libraries(${TARGET_NAME}
+    PRIVATE
+        project_options
+        project_warnings
+        project_bim
+)
+
+# ------------------------------
+# Debug symbols (reuse root infra)
+# ------------------------------
+enable_debug_symbols(${TARGET_NAME})
