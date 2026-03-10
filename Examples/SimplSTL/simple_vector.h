@@ -1,10 +1,15 @@
 ﻿#pragma once
+#include <new>
+#include <utility>
+#include <cstddef>
 
 template <typename T>
 class SimpleVector
 {
 public:
     SimpleVector(size_t size);
+    ~SimpleVector();
+
     void PushBack(const T& value);
     void PopBack();
     T& operator[](size_t index);
@@ -21,30 +26,43 @@ private:
     T* m_pData{nullptr};
     size_t m_size{0};
     size_t m_capacity{0};
+
+private:
+    SimpleVector(const SimpleVector&) = delete;
+    SimpleVector& operator=(const SimpleVector&) = delete;
 };
 
 template <typename T>
-inline SimpleVector<T>::SimpleVector(size_t size):
-    m_pData(new T[size]),
-    m_size(size), m_capacity(size)
+inline SimpleVector<T>::SimpleVector(size_t size)
+    : m_size(size),
+      m_capacity(size),
+      m_pData(static_cast<T*>(::operator new(sizeof(T) * m_capacity)))
 {
+}
+
+template <typename T>
+inline SimpleVector<T>::~SimpleVector()
+{
+    for (auto i = 0; i < m_size; i++) {
+        m_pData[i].~T();
+    }
+    ::operator delete(m_pData);
 }
 
 template <typename T>
 inline void SimpleVector<T>::PushBack(const T& value)
 {
     Grow();
-    m_pData[m_size++] = value;
+    new (&m_pData[m_size]) T(value);
+    m_size++;
 }
+
 
 template <typename T>
 inline void SimpleVector<T>::PopBack()
 {
-    if (m_size > 0)
-    {
-        // new 创建的对象会调用构造函数，delete
-        // 删除对象会调用析构函数，所以在这里不需要手动调用析构函数。
-        //m_pData[m_size - 1].~T();
+    if (m_size > 0) {
+        m_pData[m_size - 1].~T();
         m_size--;
     }
 }
@@ -52,15 +70,15 @@ inline void SimpleVector<T>::PopBack()
 template <typename T>
 inline void SimpleVector<T>::Grow()
 {
-    if (m_size + 1 >= m_capacity)
-    {
+    if (m_size >= m_capacity) {
         size_t newCapacity = m_capacity == 0 ? 1 : m_capacity * 2;
-        T* newData = new T[newCapacity];
+        T* newData = static_cast<T*>(::operator new(sizeof(T) * newCapacity));
         for (size_t i = 0; i < m_size; i++) {
-            newData[i] = m_pData[i];
+            new (&newData[i]) T(std::move(m_pData[i]));
+            m_pData[i].~T();
         }
-        
-        delete[] m_pData;
+
+       ::operator delete(m_pData);
         m_pData = newData;
         m_capacity = newCapacity;
     }
