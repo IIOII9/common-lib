@@ -21,7 +21,7 @@
     <ClInclude Include="pch.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="simple_vector.h">
+    <ClInclude Include="include\simple_vector.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
