@@ -2,12 +2,15 @@
 #include <new>
 #include <utility>
 #include <cstddef>
+#include <initializer_list>
 
 template <typename T>
 class SimpleVector
 {
 public:
+    SimpleVector(std::initializer_list<T> list);
     SimpleVector(size_t size);
+    SimpleVector();
     ~SimpleVector();
 
     void PushBack(const T& value);
@@ -17,6 +20,10 @@ public:
     size_t Size() const
     {
         return m_size;
+    }
+    size_t Capacity() const
+    {
+        return m_capacity;
     }
 
 private:
@@ -33,10 +40,27 @@ private:
 };
 
 template <typename T>
+inline SimpleVector<T>::SimpleVector(std::initializer_list<T> list)
+{
+    for (const auto& item : list) {
+        PushBack(item);
+    }
+}
+
+template <typename T>
 inline SimpleVector<T>::SimpleVector(size_t size)
     : m_size(size),
       m_capacity(size),
       m_pData(static_cast<T*>(::operator new(sizeof(T) * m_capacity)))
+{
+    for (size_t i = 0; i < m_size; i++) {
+        new (&m_pData[i]) T();
+    }
+}
+
+template <typename T>
+inline SimpleVector<T>::SimpleVector()
+    : m_size(0), m_capacity(0), m_pData(nullptr)
 {
 }
 
@@ -56,7 +80,6 @@ inline void SimpleVector<T>::PushBack(const T& value)
     new (&m_pData[m_size]) T(value);
     m_size++;
 }
-
 
 template <typename T>
 inline void SimpleVector<T>::PopBack()
