@@ -1,24 +1,39 @@
 ﻿#pragma once
+#include <utility>
+#include <cstddef>
 
-template <typename>
+template <typename T>
 class SimpleList;
 
 template <typename T>
 class SimpleListIterator;
 
+class ListNodeBase
+{
+protected:
+    ListNodeBase* m_pNext;
+    ListNodeBase* m_pPrev;
+    ListNodeBase() : m_pNext(nullptr), m_pPrev(nullptr)
+    {
+    }
+    template <typename>
+    friend class SimpleList;
+    template <typename>
+    friend class SimpleListIterator;
+};
+
 template <typename T>
-class SimpleListNode
+class SimpleListNode : public ListNodeBase
 {
 public:
-    SimpleListNode(const T& value)
-        : m_value(value), m_pNext(nullptr), m_pPrev(nullptr)
+    template <typename... Args>
+    SimpleListNode(Args&&... args)
+        :ListNodeBase(),  m_value(std::forward<Args>(args)...)
     {
     }
 
 private:
     T m_value;
-    SimpleListNode* m_pNext;
-    SimpleListNode* m_pPrev;
 
     template <typename>
     friend class SimpleList;
@@ -32,13 +47,13 @@ class SimpleListIterator
 {
 public:
     using Node = SimpleListNode<T>;
-    SimpleListIterator(Node* node = nullptr) : m_pNode(node)
+    SimpleListIterator(ListNodeBase* node = nullptr) : m_pNode(node)
     {
     }
 
     T& operator*()
     {
-        return m_pNode->m_value;
+        return static_cast<SimpleListNode<T>*>(m_pNode)->m_value;
     }
     const T& operator*() const
     {
@@ -66,7 +81,7 @@ public:
     }
 
 private:
-    Node* m_pNode;
+    ListNodeBase* m_pNode;
     template <typename>
     friend class SimpleList;
 };
@@ -81,16 +96,20 @@ public:
 public:
     SimpleList();
     ~SimpleList();
-
-    void PushBack(const T& value);
-    void PushFront(const T& value);
-
-    SimpleListIterator<T> Insert(Iterator pos, const T& value);
+    template <typename U>
+    void PushBack(U&& value);
+    template <typename U>
+    void PushFront(U&& value);
+    template <typename U>
+    SimpleListIterator<T> Insert(Iterator pos, U&& value);
     SimpleListIterator<T> Erase(Iterator pos);
 
     void PopBack();
     void PopFront();
-
+    template <typename... Args>
+    SimpleList<T>::Iterator Emplace(Iterator pos, Args&&... args);
+    template <typename... Args>
+    SimpleList<T>::Iterator EmplaceBack(Args&&... args);
     size_t Size() const;
     void Clear();
 
@@ -136,24 +155,27 @@ inline SimpleList<T>::~SimpleList()
 }
 
 template <typename T>
-inline void SimpleList<T>::PushBack(const T& value)
+template <typename U>
+inline void SimpleList<T>::PushBack(U&& value)
 {
-    Insert(End(), value);
+    Insert(End(), std::forward<U>(value));
 }
 
 template <typename T>
-inline void SimpleList<T>::PushFront(const T& value)
+template <typename U>
+inline void SimpleList<T>::PushFront(U&& value)
 {
-    Insert(Begin(), value);
+    Insert(Begin(), std::forward<U>(value));
 }
 
 template <typename T>
-inline SimpleListIterator<T> SimpleList<T>::Insert(Iterator pos, const T& value)
+template <typename U>
+inline SimpleListIterator<T> SimpleList<T>::Insert(Iterator pos, U&& value)
 {
     auto* pNode = pos.m_pNode;
-    auto* pNewNode = new SimpleListNode<T>(value);
+    auto* pNewNode = new SimpleListNode<T>(std::forward<U>(value));
 
-    Node* pPrev = pNode->m_pPrev;
+    auto* pPrev = pNode->m_pPrev;
     pPrev->m_pNext = pNewNode;
     pNewNode->m_pPrev = pPrev;
 
@@ -162,6 +184,34 @@ inline SimpleListIterator<T> SimpleList<T>::Insert(Iterator pos, const T& value)
 
     ++m_size;
     return Iterator(pNewNode);
+}
+
+template <typename T>
+template <typename... Args>
+inline SimpleList<T>::Iterator SimpleList<T>::Emplace(Iterator pos,
+                                                      Args&&... args)
+{
+    auto* pNode = pos.m_pNode;
+    // 使用完美转发构造新节点
+    auto* pNewNode = new Node(std::forward<Args>(args)...);
+
+    auto* pPrev = pNode->m_pPrev;
+    pPrev->m_pNext = pNewNode;
+    pNewNode->m_pPrev = pPrev;
+
+    pNewNode->m_pNext = pNode;
+    pNode->m_pPrev = pNewNode;
+
+    ++m_size;
+    return Iterator(pNewNode);
+    // return SimpleList<T>::Iterator();
+}
+
+template <typename T>
+template <typename... Args>
+inline SimpleList<T>::Iterator SimpleList<T>::EmplaceBack(Args&&... args)
+{
+    return Emplace(End(), std::forward<Args>(args)...);
 }
 
 template <typename T>
@@ -213,8 +263,8 @@ inline void SimpleList<T>::Splice(SimpleListIterator<T> pos, SimpleList& other,
 
     if (pos == it)
         return;  // pos 和 it 指向同一个位置，不进行操作
-    if (this == &other && pos.m_pNode == it.m_pNode->m_pNext)
-        return;  
+    if (this == &other && pos.m_pNode == pOtherNode->m_pNext)
+        return;
 
     // 从 other 中移除 pOtherNode
     auto* pOtherPrev = pOtherNode->m_pPrev;
