@@ -27,7 +27,7 @@
     <ClInclude Include="include\SimplSTLExport.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="SimpleList.h">
+    <ClInclude Include="include\SimpleList.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
