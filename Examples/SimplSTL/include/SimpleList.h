@@ -28,16 +28,14 @@ class SimpleListNode : public ListNodeBase
 public:
     template <typename... Args>
     SimpleListNode(Args&&... args)
-        :ListNodeBase(),  m_value(std::forward<Args>(args)...)
+        : ListNodeBase(), m_value(std::forward<Args>(args)...)
     {
     }
 
 private:
     T m_value;
-
     template <typename>
     friend class SimpleList;
-
     template <typename>
     friend class SimpleListIterator;
 };
@@ -46,7 +44,6 @@ template <typename T>
 class SimpleListIterator
 {
 public:
-    using Node = SimpleListNode<T>;
     SimpleListIterator(ListNodeBase* node = nullptr) : m_pNode(node)
     {
     }
@@ -57,9 +54,16 @@ public:
     }
     const T& operator*() const
     {
-        return m_pNode->m_value;
+        return static_cast<SimpleListNode<T>*>(m_pNode)->m_value;
     }
-
+    T* operator->()
+    {
+        return &(static_cast<SimpleListNode<T>*>(m_pNode)->m_value);
+    }
+    const T* operator->() const
+    {
+        return &(static_cast<SimpleListNode<T>*>(m_pNode)->m_value);
+    }
     SimpleListIterator& operator++()
     {
         m_pNode = m_pNode->m_pNext;
@@ -100,6 +104,7 @@ public:
     void PushBack(U&& value);
     template <typename U>
     void PushFront(U&& value);
+
     template <typename U>
     SimpleListIterator<T> Insert(Iterator pos, U&& value);
     SimpleListIterator<T> Erase(Iterator pos);
@@ -112,7 +117,10 @@ public:
     SimpleList<T>::Iterator EmplaceBack(Args&&... args);
     size_t Size() const;
     void Clear();
-
+    bool Empty() const
+    {
+        return m_size == 0;
+    }
     Iterator Begin() const
     {
         return Iterator(m_pSentinel->m_pNext);
@@ -128,9 +136,10 @@ public:
                 SimpleListIterator<T> it);
 
 private:
-    // SimpleListNode<T>* m_pHead;
-    // SimpleListNode<T>* m_pTail;
-    Node* m_pSentinel;
+    void LinkNode(ListNodeBase* pNode, ListNodeBase* pNewNode);
+
+private:
+    ListNodeBase* m_pSentinel;
     size_t m_size;
 
 private:
@@ -142,7 +151,7 @@ private:
 template <typename T>
 inline SimpleList<T>::SimpleList() : m_pSentinel(nullptr), m_size(0)
 {
-    m_pSentinel = new Node(T());         // 创建哨兵节点
+    m_pSentinel = new ListNodeBase();    // 创建哨兵节点
     m_pSentinel->m_pNext = m_pSentinel;  // 哨兵节点的下一个指向自己
     m_pSentinel->m_pPrev = m_pSentinel;  // 哨兵节点的上一个指向自己
 }
@@ -169,18 +178,24 @@ inline void SimpleList<T>::PushFront(U&& value)
 }
 
 template <typename T>
-template <typename U>
-inline SimpleListIterator<T> SimpleList<T>::Insert(Iterator pos, U&& value)
+inline void SimpleList<T>::LinkNode(ListNodeBase* pNode, ListNodeBase* pNewNode)
 {
-    auto* pNode = pos.m_pNode;
-    auto* pNewNode = new SimpleListNode<T>(std::forward<U>(value));
-
     auto* pPrev = pNode->m_pPrev;
     pPrev->m_pNext = pNewNode;
     pNewNode->m_pPrev = pPrev;
 
     pNewNode->m_pNext = pNode;
     pNode->m_pPrev = pNewNode;
+}
+
+template <typename T>
+template <typename U>
+inline SimpleListIterator<T> SimpleList<T>::Insert(Iterator pos, U&& value)
+{
+    auto* pNode = pos.m_pNode;
+    auto* pNewNode = new SimpleListNode<T>(std::forward<U>(value));
+
+    LinkNode(pNode, pNewNode);
 
     ++m_size;
     return Iterator(pNewNode);
@@ -195,16 +210,10 @@ inline SimpleList<T>::Iterator SimpleList<T>::Emplace(Iterator pos,
     // 使用完美转发构造新节点
     auto* pNewNode = new Node(std::forward<Args>(args)...);
 
-    auto* pPrev = pNode->m_pPrev;
-    pPrev->m_pNext = pNewNode;
-    pNewNode->m_pPrev = pPrev;
-
-    pNewNode->m_pNext = pNode;
-    pNode->m_pPrev = pNewNode;
+    LinkNode(pNode, pNewNode);
 
     ++m_size;
     return Iterator(pNewNode);
-    // return SimpleList<T>::Iterator();
 }
 
 template <typename T>
@@ -227,7 +236,7 @@ inline SimpleListIterator<T> SimpleList<T>::Erase(Iterator pos)
     pPrev->m_pNext = pNext;
     pNext->m_pPrev = pPrev;
 
-    delete pNode;
+    delete static_cast<SimpleListNode<T>*>(pNode);
     --m_size;
     return Iterator(pNext);
 }
@@ -241,10 +250,10 @@ inline size_t SimpleList<T>::Size() const
 template <typename T>
 inline void SimpleList<T>::Clear()
 {
-    SimpleListNode<T>* current = m_pSentinel->m_pNext;
+    auto* current = m_pSentinel->m_pNext;
     while (current != m_pSentinel) {
-        SimpleListNode<T>* next = current->m_pNext;
-        delete current;
+        auto* next = current->m_pNext;
+        delete static_cast<SimpleListNode<T>*>(current);
         current = next;
     }
     m_pSentinel->m_pNext = m_pSentinel;
@@ -299,5 +308,7 @@ inline void SimpleList<T>::PopBack()
 {
     if (m_size == 0)
         return;  // 链表为空，不进行操作
-    Erase(--End());
+    Iterator it = End();
+    --it;
+    Erase(it);
 }

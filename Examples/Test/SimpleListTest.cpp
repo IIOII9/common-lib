@@ -376,3 +376,16 @@ TEST_F(SimpleListTest, SpliceSameListAdjacentNoChange)
     std::vector<int> expected{1, 2, 3};
     EXPECT_EQ(ToVector(m_list), expected);
 }
+
+TEST_F(SimpleListTest, EmplaceBackString)
+{
+    SimpleList<std::string> list;
+
+    list.EmplaceBack("hello");
+    list.EmplaceBack(3, 'a');
+
+    auto it = list.Begin();
+    EXPECT_EQ(*it, "hello");
+    ++it;
+    EXPECT_EQ(*it, "aaa");
+}
