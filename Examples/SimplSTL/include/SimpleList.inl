@@ -1,5 +1,4 @@
-﻿#pragma once
-#include <cassert>
+﻿#include <cassert>
 template <typename T>
 inline T& SimpleListIterator<T>::operator*()
 {
@@ -36,7 +35,7 @@ inline SimpleListIterator<T> SimpleListIterator<T>::operator++(int)
 {
     SimpleListIterator tmp = *this;
     ++(*this);
-    return *tmp;
+    return tmp;
 }
 
 template <typename T>
@@ -51,7 +50,7 @@ inline SimpleListIterator<T> SimpleListIterator<T>::operator--(int)
 {
     SimpleListIterator tmp = *this;
     --(*this);
-    return *tmp;
+    return tmp;
 }
 
 template <typename T>
@@ -77,7 +76,7 @@ inline SimpleList<T>::SimpleList() : m_pSentinel(nullptr), m_size(0)
 }
 
 template <typename T>
-inline SimpleList<T>::~SimpleList()
+inline SimpleList<T>::~SimpleList() noexcept
 {
     Clear();
     delete m_pSentinel;
@@ -104,13 +103,13 @@ inline void SimpleList<T>::LinkBefore(ListNodeBase* pPosNode,
     assert(pPosNode != nullptr);
     assert(pNode != nullptr);
 
-    // pos 必须已经在链里
-    assert(pPosNode->m_pPrev != nullptr);
-    assert(pPosNode->m_pNext != nullptr);
+    //// pos 必须已经在链里
+    //assert(pPosNode->m_pPrev != nullptr);
+    //assert(pPosNode->m_pNext != nullptr);
 
-    // node 应该是“未挂链”的新节点
-    assert(pNode->m_pPrev == nullptr);
-    assert(pNode->m_pNext == nullptr);
+    //// node 应该是“未挂链”的新节点
+    //assert(pNode->m_pPrev == nullptr);
+    //assert(pNode->m_pNext == nullptr);
 
     // 不能把自己插到自己前面
     if (pNode == pPosNode)
