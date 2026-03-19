@@ -21,7 +21,7 @@ protected:
 TEST_F(SimpleVectorTest, InitialSize)
 {
 
-	EXPECT_EQ(m_vec.Size(), 0);
+	EXPECT_EQ(m_vec.size(), 0);
 	EXPECT_EQ(m_vec.Capacity(), 0);
 }
 TEST_F(SimpleVectorTest, PushBack)
@@ -29,6 +29,6 @@ TEST_F(SimpleVectorTest, PushBack)
 	for (int i = 0; i < 20; i++) {
 		m_vec.PushBack(i);
 	}
-	EXPECT_EQ(m_vec.Size(), 20);
+	EXPECT_EQ(m_vec.size(), 20);
 	EXPECT_EQ(m_vec.Capacity(), 32);
 }
