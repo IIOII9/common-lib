@@ -17,7 +17,7 @@ public:
     void PopBack();
     T& operator[](size_t index);
     const T& operator[](size_t index) const;
-    size_t Size() const
+    size_t size() const
     {
         return m_size;
     }

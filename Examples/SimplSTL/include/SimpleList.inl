@@ -1,9 +1,8 @@
 ﻿#pragma once
-
+#include <cassert>
 template <typename T>
 inline T& SimpleListIterator<T>::operator*()
 {
-    
     return static_cast<SimpleListNode<T>*>(m_pNode)->m_value;
 }
 
@@ -88,14 +87,14 @@ template <typename T>
 template <typename U>
 inline void SimpleList<T>::PushBack(U&& value)
 {
-    Insert(End(), std::forward<U>(value));
+    Insert(end(), std::forward<U>(value));
 }
 
 template <typename T>
 template <typename U>
 inline void SimpleList<T>::PushFront(U&& value)
 {
-    Insert(Begin(), std::forward<U>(value));
+    Insert(begin(), std::forward<U>(value));
 }
 
 template <typename T>
@@ -167,7 +166,7 @@ template <typename T>
 template <typename... Args>
 inline SimpleList<T>::Iterator SimpleList<T>::EmplaceBack(Args&&... args)
 {
-    return Emplace(End(), std::forward<Args>(args)...);
+    return Emplace(end(), std::forward<Args>(args)...);
 }
 
 template <typename T>
@@ -175,7 +174,7 @@ inline SimpleListIterator<T> SimpleList<T>::Erase(Iterator pos)
 {
     auto* pNode = pos.m_pNode;
     if (pNode == m_pSentinel) {
-        return End();  // 不允许删除哨兵节点，直接返回原位置
+        return end();  // 不允许删除哨兵节点，直接返回原位置
     }
     auto* pNext = pNode->m_pNext;
     Unlink(pNode);
@@ -185,7 +184,7 @@ inline SimpleListIterator<T> SimpleList<T>::Erase(Iterator pos)
 }
 
 template <typename T>
-inline size_t SimpleList<T>::Size() const
+inline size_t SimpleList<T>::size() const
 {
     return m_size;
 }
@@ -206,8 +205,7 @@ inline void SimpleList<T>::Clear()
 }
 
 template <typename T>
-inline void SimpleList<T>::Splice(SimpleListIterator<T> pos, SimpleList& other,
-                                  SimpleListIterator<T> it)
+inline void SimpleList<T>::Splice(Iterator pos, SimpleList& other, Iterator it)
 {
     auto* pOtherNode = it.m_pNode;
     if (pOtherNode == other.m_pSentinel) {
@@ -236,7 +234,7 @@ inline void SimpleList<T>::PopFront()
 {
     if (m_size == 0)
         return;  // 链表为空，不进行操作
-    Erase(Begin());
+    Erase(begin());
 }
 
 template <typename T>
@@ -244,7 +242,7 @@ inline void SimpleList<T>::PopBack()
 {
     if (m_size == 0)
         return;  // 链表为空，不进行操作
-    Iterator it = End();
+    Iterator it = end();
     --it;
     Erase(it);
 }

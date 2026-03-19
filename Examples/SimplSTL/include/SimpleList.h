@@ -80,15 +80,15 @@ public:
 
 public:
     SimpleList();
-    ~SimpleList();
+    ~SimpleList() noexcept;
     template <typename U>
     void PushBack(U&& value);
     template <typename U>
     void PushFront(U&& value);
 
     template <typename U>
-    SimpleListIterator<T> Insert(Iterator pos, U&& value);
-    SimpleListIterator<T> Erase(Iterator pos);
+    Iterator Insert(Iterator pos, U&& value);
+    Iterator Erase(Iterator pos);
 
     void PopBack();
     void PopFront();
@@ -96,33 +96,32 @@ public:
     Iterator Emplace(Iterator pos, Args&&... args);
     template <typename... Args>
     Iterator EmplaceBack(Args&&... args);
-    size_t Size() const;
+    size_t size() const;
     void Clear();
-    bool Empty() const
+    bool empty() const
     {
         return m_size == 0;
     }
-    Iterator Begin() const
+    Iterator begin() const
     {
         return Iterator(m_pSentinel->m_pNext);
     }
 
-    Iterator End() const
+    Iterator end() const
     {
         return Iterator(m_pSentinel);
     }
     /*把 other 中 it 指向的节点
     移动到当前链表 pos 位置之前*/
-    void Splice(SimpleListIterator<T> pos, SimpleList& other,
-                SimpleListIterator<T> it);
+    void Splice(Iterator pos, SimpleList& other, Iterator it);
 
 private:
     void LinkBefore(ListNodeBase* pNode, ListNodeBase* pNewNode);
     void Unlink(ListNodeBase* node);
 
 private:
-    ListNodeBase* m_pSentinel;
-    size_t m_size;
+    ListNodeBase* m_pSentinel{nullptr};
+    size_t m_size{0};
 
 private:
     // 禁止拷贝构造和赋值操作
